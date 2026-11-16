@@ -1,0 +1,127 @@
+
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cupa de Cruce</title>
+<style>
+body{font-family:Arial,sans-serif;background:#101827;color:white;margin:0;padding:18px}
+h1{text-align:center;color:#f5c542}
+h2{color:#f5c542;border-bottom:1px solid #536078;padding-bottom:8px}
+.card{background:#1d293b;padding:14px;margin:12px 0;border-radius:12px}
+input{padding:9px;margin:4px;border-radius:6px;border:1px solid #778;background:#fff;max-width:95%}
+button{padding:10px 15px;border:0;border-radius:7px;background:#f5c542;font-weight:bold;margin:5px}
+table{width:100%;border-collapse:collapse}
+td,th{padding:8px;border-bottom:1px solid #536078;text-align:left}
+.small{color:#bbc5d5;font-size:13px}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<h1>🏆 CUPA DE CRUCE 🏆</h1>
+<p style="text-align:center">Campionatul oficial</p>
+
+<div class="card">
+<h2>Despre competiție</h2>
+<p>18 echipe · 36 jucători · 4 grupe</p>
+<p>Se califică primele 4 echipe din fiecare grupă.</p>
+<p>Fiecare meci se joacă în sistem 3 din 5.</p>
+<p>Victorie = 1 punct · Înfrângere = 0 puncte</p>
+</div>
+
+<div class="card">
+<h2>Administrare</h2>
+<button onclick="login()">Intră ca administrator</button>
+<button onclick="logout()">Ieșire</button>
+<span id="status" class="small">Mod vizitator</span>
+</div>
+
+<div id="admin" class="card hidden">
+<h2>Editează echipele</h2>
+<p class="small">Scrie numele echipelor și jucătorilor, apoi apasă Salvează.</p>
+<div id="edit"></div>
+<button onclick="save()">Salvează modificările</button>
+</div>
+
+<div id="groups"></div>
+
+<div class="card">
+<h2>🏆 Faza eliminatorie</h2>
+<p>Optimi de finală – 16 echipe</p>
+<p>Sferturi de finală – 8 echipe</p>
+<p>Semifinale – 4 echipe</p>
+<p>Finala – 2 echipe</p>
+<p class="small">Rezultatele fazei eliminatorii vor fi completate după stabilirea echipelor calificate.</p>
+</div>
+
+<script>
+const sizes=[5,5,4,4];
+let teams=JSON.parse(localStorage.getItem("cupaTeams")||"null");
+if(!teams){
+ teams=sizes.map((n,g)=>Array.from({length:n},(_,i)=>({
+ name:"Echipa "+(g*5+i+1),
+ p1:"Jucător 1",p2:"Jucător 2",points:0
+ })));
+}
+let isAdmin=false;
+
+function render(){
+ let html="";
+ teams.forEach((group,g)=>{
+  html+=`<div class="card"><h2>Grupa ${"ABCD"[g]}</h2>
+  <table><tr><th>Echipă</th><th>Jucători</th><th>Puncte</th></tr>`;
+  group.forEach((t,i)=>{
+   html+=`<tr><td>${esc(t.name)}</td><td>${esc(t.p1)} / ${esc(t.p2)}</td><td>${t.points}</td></tr>`;
+  });
+  html+="</table></div>";
+ });
+ document.getElementById("groups").innerHTML=html;
+ let edit="";
+ teams.forEach((group,g)=>{
+  edit+=`<h3>Grupa ${"ABCD"[g]}</h3>`;
+  group.forEach((t,i)=>{
+   edit+=`<div class="card">
+   <b>Echipa ${i+1}</b><br>
+   <input id="n${g}-${i}" value="${esc(t.name)}" placeholder="Numele echipei">
+   <input id="p${g}-${i}" value="${esc(t.p1)}" placeholder="Jucător 1">
+   <input id="q${g}-${i}" value="${esc(t.p2)}" placeholder="Jucător 2">
+   <br>Puncte:
+   <input id="s${g}-${i}" type="number" min="0" value="${t.points}">
+   </div>`;
+  });
+ });
+ document.getElementById("edit").innerHTML=edit;
+}
+function esc(s){
+ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function login(){
+ let p=prompt("Parola administratorului:");
+ if(p==="1234"){
+  isAdmin=true;
+  document.getElementById("admin").classList.remove("hidden");
+  document.getElementById("status").innerText="Mod administrator";
+ }else alert("Parolă incorectă!");
+}
+function logout(){
+ isAdmin=false;
+ document.getElementById("admin").classList.add("hidden");
+ document.getElementById("status").innerText="Mod vizitator";
+}
+function save(){
+ if(!isAdmin)return;
+ teams.forEach((group,g)=>group.forEach((t,i)=>{
+  t.name=document.getElementById(`n${g}-${i}`).value;
+  t.p1=document.getElementById(`p${g}-${i}`).value;
+  t.p2=document.getElementById(`q${g}-${i}`).value;
+  t.points=Math.max(0,Number(document.getElementById(`s${g}-${i}`).value)||0);
+ }));
+ localStorage.setItem("cupaTeams",JSON.stringify(teams));
+ render();
+ alert("Modificările au fost salvate!");
+}
+render();
+</script>
+</body>
+</html>
